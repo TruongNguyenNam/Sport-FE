@@ -1,5 +1,9 @@
-<!-- Start of Selection -->
+
 <template>
+        <div>
+            <ProductForm></ProductForm>
+        </div>
+
     <div>
         <table class="table">
             <thead>
@@ -58,20 +62,20 @@
         </table>
     </div>
 </template>
-
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { ProductService } from '../../services/ProductService';
 import type { ProductResponse } from '../../models/product';
-
+import ProductForm from './ProductForm.vue';
 const listProduct = ref<ProductResponse[]>([]);
-
 onMounted(async () => {
-    const page = 8;
-    const size = 2;
+    const page = 0;
+    const size = 5;
     try {
         const response = await ProductService.getAllProducts(page, size);
         listProduct.value = response.content;
+        console.log(listProduct.value);
+        
     } catch (error) {
         console.error("Error fetching products:", error);
         listProduct.value = [];
