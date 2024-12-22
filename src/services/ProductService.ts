@@ -1,19 +1,20 @@
-import type { ProductRequest, ProductResponse, ProductSearchRequest } from "../models/product";
+import type { ProductRequest, ProductResponse, ProductSearchRequest, ProductApiResponse } from "../models/product";
 import axios from 'axios';
+
 const API_URL = "http://localhost:8080/api/v1/admin/product";
 const axiosInstance = axios.create();
 
 export const ProductService = {
-    getAllProducts: async (page: number = 0, size: number = 2): Promise<ProductResponse[]> => {
-        const response = await axiosInstance.get<ProductResponse[]>(`${API_URL}?page=${page}&size=${size}`);
-        return response.data;
+    getAllProducts: async (page: number = 0, size: number = 2): Promise<ProductApiResponse> => {
+        const response = await axiosInstance.get<ProductApiResponse>(`${API_URL}?page=${page}&size=${size}`);
+        return response.data; // Trả về đối tượng ProductApiResponse
     },
 
-    searchProductsByAttribute: async (searchRequest: ProductSearchRequest, page: number = 0, size: number = 2): Promise<ProductResponse[]> => {
-        const response = await axiosInstance.get<ProductResponse[]>(`${API_URL}/search`, {
+    searchProductsByAttribute: async (searchRequest: ProductSearchRequest, page: number = 0, size: number = 2): Promise<ProductApiResponse> => {
+        const response = await axiosInstance.get<ProductApiResponse>(`${API_URL}/search`, {
             params: { ...searchRequest, page, size }
         });
-        return response.data;
+        return response.data; // Trả về đối tượng ProductApiResponse
     },
 
     addProduct: async (productRequest: ProductRequest): Promise<ProductResponse> => {
@@ -30,22 +31,3 @@ export const ProductService = {
         await axiosInstance.delete(API_URL, { data: ids });
     }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

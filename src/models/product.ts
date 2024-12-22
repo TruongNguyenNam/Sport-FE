@@ -1,3 +1,5 @@
+import type { ApiResponse } from "./apiResponse";
+
 export interface ProductSpecificationOption {
     specificationId: number;
     productId: number;
@@ -68,3 +70,4 @@ export interface ProductSearchRequest {
     categoryName: string;
 }
 
+export interface ProductApiResponse extends ApiResponse<ProductResponse> {}

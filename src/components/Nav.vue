@@ -3,13 +3,19 @@
     <nav class="navbar-vertical">
       <ul class="nav flex-column">
         <li class="nav-item">
-          <RouterLink to="/" class="nav-link active" aria-current="page">Home</RouterLink>
+          <RouterLink to="/" class="nav-link active" aria-current="page">Product</RouterLink>
         </li>
         <li class="nav-item">
-          <RouterLink to="/product" class="nav-link">Product</RouterLink>
+          <RouterLink to="/category" class="nav-link">Category</RouterLink>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Pricing</a>
+          <RouterLink to="/supplier" class="nav-link">Supplier</RouterLink>
+        </li>
+        <li class="nav-item">
+          <RouterLink to="/attribute" class="nav-link">ProductAttribute</RouterLink>
+        </li>
+        <li class="nav-item">
+          <RouterLink to="/tag" class="nav-link">ProductTag</RouterLink>
         </li>
         <li class="nav-item">
           <a class="nav-link disabled">Disabled</a>
