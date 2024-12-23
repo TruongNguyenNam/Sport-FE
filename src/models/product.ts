@@ -2,7 +2,7 @@ import type { ApiResponse } from "./apiResponse";
 
 export interface ProductSpecificationOption {
     specificationId: number;
-    productId: number;
+    productId?: number;
     value: string;
 }
 

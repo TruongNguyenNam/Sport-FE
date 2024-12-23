@@ -1,6 +1,6 @@
 <template>
     <div>
-        <form @submit.prevent = 'handleAdd'>
+        <form @submit.prevent='handleAdd'>
             <div class="row">
                 <div class="col">
                     <input type="text" v-model="product.name" class="form-control" placeholder="Tên sản phẩm" style="width: 600px;">
@@ -40,7 +40,53 @@
                         </option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100px;">add</button>
+
+                <div class="col-12 mt-3">
+                    <h6>Thuộc tính sản phẩm</h6>
+                    
+                    <!-- Danh sách các cặp select-input -->
+                    <div v-for="(item, index) in specificationItems" 
+                         :key="index" 
+                         class="d-flex align-items-center gap-2 mb-2">
+                        <select 
+                            v-model="item.specificationId" 
+                            class="form-control"
+                            style="width: 300px;"
+                            @change="updateSpecificationName(index)"
+                        >
+                            <option value="" disabled selected>Chọn thuộc tính</option>
+                            <option v-for="spec in availableSpecifications(index)" 
+                                    :key="spec.id" 
+                                    :value="spec.id">
+                                {{ spec.name }}
+                            </option>
+                        </select>
+
+                        <input 
+                            type="text" 
+                            v-model="item.value" 
+                            class="form-control" 
+                            style="width: 300px;"
+                            :placeholder="'Nhập giá trị'"
+                        />
+                        <button 
+                            @click.prevent="removeSpecificationItem(index)" 
+                            class="btn btn-danger btn-sm"
+                        >
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+
+                    <!-- Nút thêm thuộc tính -->
+                    <button 
+                        @click.prevent="addSpecificationItem" 
+                        class="btn btn-secondary mt-2"
+                    >
+                        + Thêm thuộc tính
+                    </button>
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-3" style="width: 100px;">add</button>
             </div>
         </form>
     </div>
@@ -54,86 +100,160 @@ import type { ProductRequest } from '../../models/product';
 import { reactive, ref, onMounted } from 'vue';
 import type { CategoryResponse } from '../../models/category';
 import type { SupplierResponse } from '../../models/supplier';
+import type { productSpecificationResponse } from '../../models/productSpecification';
+import type { ProductTagResponse } from '../../models/ProductTag';
+import { ProductSpecificationService } from '../../services/ProductSpecificationService';
+import  { ProductTagService } from '../../services/ProductTagService';
 
 const product = reactive<ProductRequest>({
- name: '',
- description: '',
- price: 0,
- stockQuantity: 0,
- sportType: '',
- material: '',
- size: '',
- color: '',
- sku: '', // Thêm trường SKU
- supplierId: 0,
- categoryId: 0,
- sportTypeId: [], // Thêm trường sportTypeId
- tagId: [], // Thêm trường tagId
- productSpecificationOptions: [], // Thêm trường productSpecificationOptions
- productImageIds: [], // Thêm trường productImageIds
- inventoryIds: [], // Thêm trường inventoryIds
+    name: '',
+    description: '',
+    price: 0,
+    stockQuantity: 0,
+    sportType: '',
+    material: '',
+    size: '',
+    color: '',
+    sku: '',
+    supplierId: 0,
+    categoryId: 0,
+    sportTypeId: [],
+    tagId: [],
+    productSpecificationOptions: [],
+    productImageIds: [],
+    inventoryIds: [],
 });
 
 const categories = ref<CategoryResponse[]>([]);
 const suppliers = ref<SupplierResponse[]>([]);
+const productSpecification = ref<productSpecificationResponse[]>([]);
+const productTag = ref<ProductTagResponse[]>([]);
+
+export interface SpecificationItem {
+    specificationId: number | null;
+    specificationName: string;
+    value: string;
+}
+
+const specificationItems = ref<SpecificationItem[]>([]);
 
 onMounted(async () => {
     const page = 0;
     const size = 5;
     try {
-        const categoriesList = await CategoryService.getAllCategories(page,size);
-         categories.value = categoriesList.content;
-        console.log('Categories:', categories.value); 
-        const supplierList = await SupplierService.getAllSupplier(page,size);
+        const categoriesList = await CategoryService.getAllCategories(page, size);
+        categories.value = categoriesList.content;
+        console.log('Categories:', categories.value);
+        const supplierList = await SupplierService.getAllSupplier(page, size);
         suppliers.value = supplierList.content;
-        console.log('Suppliers:', suppliers.value); // Kiểm tra dữ liệu suppliers
+        console.log('Suppliers:', suppliers.value);
+        const productSpecificationList = await ProductSpecificationService.getAllProductAttribute(page, size);
+        productSpecification.value = productSpecificationList.content;
+        const productTagList = await ProductTagService.getAllTags(page, size);
+        productTag.value = await productTagList.content;
     } catch (error) {
-        console.error("Error fetching categories or suppliers:", error);
+        console.error("Error fetching data:", error);
     }
 });
 
-const handleAdd = async () => {
-    try {
-       // Ensure product is of type ProductRequest
-       const newProduct: ProductRequest = {
-           ...product // Spread the existing product object
-       };
-       
-        // Gọi API để thêm sản phẩm mới
-       await ProductService.addProduct(newProduct);
-       console.log('Product added successfully:', newProduct);
-       
-       // Reset form sau khi thêm thành công
-       Object.assign(product, {
-           name: '',
-           description: '',
-           price: 0,
-           stockQuantity: 0,
-           sportType: '',
-           material: '',
-           size: '',
-           color: '',
-           sku: '',
-           supplierId: 0,
-           categoryId: 0,
-           sportTypeId: [],
-           tagId: [],
-           productSpecificationOptions: [],
-           productImageIds: [],
-           inventoryIds: [],
-       });
-        // Có thể thêm thông báo thành công hoặc điều hướng đến trang khác
-   } catch (error) {
-       console.error("Error adding product:", error);
-   }
+// Thêm một cặp select-input mới
+const addSpecificationItem = () => {
+    specificationItems.value.push({
+        specificationId: null,
+        specificationName: '',
+        value: ''
+    });
 };
 
+// Xóa một cặp select-input
+const removeSpecificationItem = (index: number) => {
+    specificationItems.value.splice(index, 1);
+};
 
+// Lấy danh sách thuộc tính có sẵn (chưa được chọn) cho mỗi select
+const availableSpecifications = (currentIndex: number) => {
+    return productSpecification.value.filter(spec => 
+        !specificationItems.value.some((item, index) => 
+            index !== currentIndex && item.specificationId === spec.id
+        )
+    );
+};
 
+// Cập nhật tên thuộc tính khi chọn từ select
+const updateSpecificationName = (index: number) => {
+    const selectedId = specificationItems.value[index].specificationId;
+    const spec = productSpecification.value.find(s => s.id === selectedId);
+    if (spec) {
+        specificationItems.value[index].specificationName = spec.name;
+    }
+};
+
+const handleAdd = async () => {
+    try {
+        const newProduct: ProductRequest = {
+            ...product,
+            productSpecificationOptions: specificationItems.value
+                .filter(item => item.specificationId && item.value)
+                .map(item => ({
+                    specificationId: item.specificationId!,
+                    value: item.value
+                }))
+        };
+
+        await ProductService.addProduct(newProduct);
+        console.log('Product added successfully:', newProduct);
+
+        // Reset form
+        Object.assign(product, {
+            name: '',
+            description: '',
+            price: 0,
+            stockQuantity: 0,
+            sportType: '',
+            material: '',
+            size: '',
+            color: '',
+            sku: '',
+            supplierId: 0,
+            categoryId: 0,
+            sportTypeId: [],
+            tagId: [],
+            productSpecificationOptions: [],
+            productImageIds: [],
+            inventoryIds: [],
+        });
+        specificationItems.value = []; // Reset specifications
+    } catch (error) {
+        console.error("Error adding product:", error);
+    }
+};
+
+// Thêm một cặp select-input mặc định khi component được tạo
+onMounted(() => {
+    addSpecificationItem();
+});
 </script>
 
 <style scoped>
 .form-control {
     margin-top: 10px;
+}
+.gap-2 {
+    gap: 0.5rem;
+}
+.mt-2 {
+    margin-top: 0.5rem;
+}
+.mt-3 {
+    margin-top: 1rem;
+}
+.mb-2 {
+    margin-bottom: 0.5rem;
+}
+.d-flex {
+    display: flex;
+}
+.align-items-center {
+    align-items: center;
 }
 </style>
